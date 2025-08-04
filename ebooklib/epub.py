@@ -1562,14 +1562,24 @@ class EpubReader(object):
                     ei = EpubCover(uid=r.get('id'), file_name=unquote(r.get('href')))
 
                     ei.media_type = media_type
-                    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                    try:
+                        ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                    except KeyError:
+                        # Skip missing cover images - publishers sometimes reference images that don't exist
+                        logging.warning('Missing cover image in EPUB: %s', zip_path.join(self.opf_dir, ei.get_name()))
+                        continue
                 else:
                     ei = EpubImage()
 
                     ei.id = r.get('id')
                     ei.file_name = unquote(r.get('href'))
                     ei.media_type = media_type
-                    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                    try:
+                        ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                    except KeyError:
+                        # Skip missing images - publishers sometimes reference images that don't exist
+                        logging.warning('Missing image in EPUB: %s', zip_path.join(self.opf_dir, ei.get_name()))
+                        continue
             else:
                 # different types
                 ei = EpubItem()
